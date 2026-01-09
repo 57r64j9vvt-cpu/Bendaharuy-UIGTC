@@ -31,8 +31,12 @@ export async function getSucProgress(eventId: string) {
             total: totalMembers,
             paid: paidMembers,
         }
-    } catch (error) {
-        console.error('Error fetching SUC progress:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            // Suppress duplicate logs
+        } else {
+            console.error('Error fetching SUC progress:', error)
+        }
         return { success: false, error: 'Failed to fetch SUC progress' }
     }
 }
@@ -87,8 +91,12 @@ export async function markAsPaid(memberId: string, eventId: string) {
 
         revalidatePath('/')
         return { success: true }
-    } catch (error) {
-        console.error('Error marking SUC as paid:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            console.warn('⚠️  Database Connection Failed: DNS resolution timed out. Check your MongoDB Atlas IP Whitelist.')
+        } else {
+            console.error('Error marking SUC as paid:', error)
+        }
         return { success: false, error: 'Failed to mark as paid' }
     }
 }
@@ -111,8 +119,12 @@ export async function getSucDetails(eventId: string) {
         })
 
         return { success: true, data: records }
-    } catch (error) {
-        console.error('Error fetching SUC details:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            // Suppress duplicate logs
+        } else {
+            console.error('Error fetching SUC details:', error)
+        }
         return { success: false, error: 'Failed to fetch SUC details' }
     }
 }
@@ -126,8 +138,12 @@ export async function getLatestEventId() {
             orderBy: { createdAt: 'desc' }
         })
         return { success: true, id: event?.id }
-    } catch (error) {
-        console.error('Error fetching latest event ID:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            // Suppress duplicate logs
+        } else {
+            console.error('Error fetching latest event ID:', error)
+        }
         return { success: false, error: 'Failed to fetch latest event ID' }
     }
 }

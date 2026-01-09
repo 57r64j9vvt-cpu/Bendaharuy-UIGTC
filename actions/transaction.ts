@@ -32,7 +32,7 @@ export async function createTransaction(data: CreateTransactionData) {
         console.timeEnd('Revalidate')
 
         return { success: true }
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating transaction:', error)
         return { success: false, error: 'Failed to create transaction' }
     }
@@ -82,8 +82,12 @@ export async function getFinancialChartData() {
         const chartData = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
 
         return { success: true, data: chartData }
-    } catch (error) {
-        console.error('Error fetching chart data:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            console.warn('⚠️  Database Connection Failed: DNS resolution timed out. Check your MongoDB Atlas IP Whitelist.')
+        } else {
+            console.error('Error fetching chart data:', error)
+        }
         return { success: false, error: 'Failed to fetch chart data' }
     }
 }
@@ -97,8 +101,12 @@ export async function getRecentTransactions() {
             }
         })
         return { success: true, data: transactions }
-    } catch (error) {
-        console.error('Error fetching recent transactions:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            // Suppress duplicate logs if multiple actions fire at once
+        } else {
+            console.error('Error fetching recent transactions:', error)
+        }
         return { success: false, error: 'Failed to fetch recent transactions' }
     }
 }
@@ -111,8 +119,12 @@ export async function getAllTransactions() {
             }
         })
         return { success: true, data: transactions }
-    } catch (error) {
-        console.error('Error fetching all transactions:', error)
+    } catch (error: any) {
+        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
+            // Suppress duplicate logs
+        } else {
+            console.error('Error fetching all transactions:', error)
+        }
         return { success: false, error: 'Failed to fetch messages' }
     }
 }
