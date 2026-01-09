@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { handleDbError } from '@/lib/db-error'
 
 /**
  * Calculates the percentage of members who have paid for a specific event.
@@ -32,12 +33,7 @@ export async function getSucProgress(eventId: string) {
             paid: paidMembers,
         }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            // Suppress duplicate logs
-        } else {
-            console.error('Error fetching SUC progress:', error)
-        }
-        return { success: false, error: 'Failed to fetch SUC progress' }
+        return handleDbError(error, 'fetching SUC progress')
     }
 }
 
@@ -92,12 +88,7 @@ export async function markAsPaid(memberId: string, eventId: string) {
         revalidatePath('/')
         return { success: true }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            console.warn('⚠️  Database Connection Failed: DNS resolution timed out. Check your MongoDB Atlas IP Whitelist.')
-        } else {
-            console.error('Error marking SUC as paid:', error)
-        }
-        return { success: false, error: 'Failed to mark as paid' }
+        return handleDbError(error, 'marking SUC as paid')
     }
 }
 
@@ -120,12 +111,7 @@ export async function getSucDetails(eventId: string) {
 
         return { success: true, data: records }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            // Suppress duplicate logs
-        } else {
-            console.error('Error fetching SUC details:', error)
-        }
-        return { success: false, error: 'Failed to fetch SUC details' }
+        return handleDbError(error, 'fetching SUC details')
     }
 }
 
@@ -139,11 +125,6 @@ export async function getLatestEventId() {
         })
         return { success: true, id: event?.id }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            // Suppress duplicate logs
-        } else {
-            console.error('Error fetching latest event ID:', error)
-        }
-        return { success: false, error: 'Failed to fetch latest event ID' }
+        return handleDbError(error, 'fetching latest event ID')
     }
 }

@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { handleDbError } from '@/lib/db-error'
 
 export type CreateTransactionData = {
     amount: number
@@ -33,8 +34,7 @@ export async function createTransaction(data: CreateTransactionData) {
 
         return { success: true }
     } catch (error: any) {
-        console.error('Error creating transaction:', error)
-        return { success: false, error: 'Failed to create transaction' }
+        return handleDbError(error, 'creating transaction')
     }
 }
 
@@ -83,12 +83,7 @@ export async function getFinancialChartData() {
 
         return { success: true, data: chartData }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            console.warn('⚠️  Database Connection Failed: DNS resolution timed out. Check your MongoDB Atlas IP Whitelist.')
-        } else {
-            console.error('Error fetching chart data:', error)
-        }
-        return { success: false, error: 'Failed to fetch chart data' }
+        return handleDbError(error, 'fetching chart data')
     }
 }
 
@@ -102,12 +97,7 @@ export async function getRecentTransactions() {
         })
         return { success: true, data: transactions }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            // Suppress duplicate logs if multiple actions fire at once
-        } else {
-            console.error('Error fetching recent transactions:', error)
-        }
-        return { success: false, error: 'Failed to fetch recent transactions' }
+        return handleDbError(error, 'fetching recent transactions')
     }
 }
 
@@ -120,11 +110,6 @@ export async function getAllTransactions() {
         })
         return { success: true, data: transactions }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            // Suppress duplicate logs
-        } else {
-            console.error('Error fetching all transactions:', error)
-        }
-        return { success: false, error: 'Failed to fetch messages' }
+        return handleDbError(error, 'fetching all transactions')
     }
 }

@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { handleDbError } from '@/lib/db-error'
 
 export async function getDashboardMetrics() {
     try {
@@ -33,11 +34,6 @@ export async function getDashboardMetrics() {
             },
         }
     } catch (error: any) {
-        if (error?.message?.includes('DNS resolution') || error?.message?.includes('request timed out')) {
-            console.warn('⚠️  Database Connection Failed: DNS resolution timed out. Check your MongoDB Atlas IP Whitelist.')
-        } else {
-            console.error('Error fetching dashboard metrics:', error)
-        }
-        return { success: false, error: 'Failed to fetch dashboard metrics' }
+        return handleDbError(error, 'fetching dashboard metrics')
     }
 }
