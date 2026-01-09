@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Model Transaction
+model Transaction {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  amount      Int             // Using Int for IDR (no decimals needed)
+  type        TransactionType
+  category    String
+  date        DateTime
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@map("transactions")
+}
+
+// 2. Model Member
+model Member {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  division   String       // e.g., "Event", "HR", "PI"
+  role       MemberRole   @default(STAFF)
+  status     MemberStatus @default(ACTIVE)
+  joinedAt   DateTime     @default(now()) @map("joined_at")
+  sucRecords SucRecord[]
+
+  @@map("members")
+}
+
+// 3. Model SucEvent (The billing period/event)
+model SucEvent {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  amountRequired Int         @map("amount_required") // Base amount, override in Record
+  deadline       DateTime
+  createdAt      DateTime    @default(now()) @map("created_at")
+  sucRecords     SucRecord[]
+
+  @@map("suc_events")
+}
+
+// 4. Model SucRecord (Tracking who paid for which event)
+model SucRecord {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  memberId     String    @map("member_id") @db.ObjectId
+  member       Member    @relation(fields: [memberId], references: [id])
+  eventId      String    @map("event_id") @db.ObjectId
+  event        SucEvent  @relation(fields: [eventId], references: [id])
+  status       SucStatus @default(UNPAID)
+  billedAmount Int       @default(150000) @map("billed_amount") // 200k, 170k, or 150k
+  paidAt       DateTime? @map("paid_at")
+
+  @@unique([memberId, eventId]) 
+  @@map("suc_records")
+}
+
+// Enums
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SucStatus {
+  UNPAID
+  PAID
+}
+
+enum MemberRole {
+  PI
+  BPH
+  STAFF
+}
