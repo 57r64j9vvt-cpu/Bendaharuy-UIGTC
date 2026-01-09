@@ -17,6 +17,13 @@ export function handleDbError(error: any, context: string) {
         'Server selection timed out'
     ]
 
+    const isAuthenticationError = errorString.includes('Authentication failed') || errorString.includes('bad auth')
+
+    if (isAuthenticationError) {
+        console.error(`❌ DB Error (${context}): Authentication Failed. Check your DATABASE_URL password and username.`)
+        return { success: false, error: 'Database authentication failed' }
+    }
+
     const isNetworkError = networkKeywords.some(keyword =>
         errorString.includes(keyword) || message.includes(keyword)
     )
