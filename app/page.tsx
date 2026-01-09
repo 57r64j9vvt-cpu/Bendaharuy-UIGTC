@@ -57,20 +57,20 @@ export default function Dashboard() {
 
     useEffect(() => {
         getDashboardMetrics().then(res => {
-            if (res.success && res.data) setMetrics(res.data)
+            if (res.success && 'data' in res) setMetrics(res.data)
         })
 
         getFinancialChartData().then(res => {
-            if (res.success && res.data) setChartData(res.data)
+            if (res.success && 'data' in res) setChartData(res.data)
         })
 
         // Fetch Latest SUC Event and Data
         getLatestEventId().then(res => {
-            if (res.success && res.id) {
+            if (res.success && 'id' in res && res.id) {
                 setCurrentEventId(res.id)
                 // Fetch progress
                 getSucProgress(res.id).then(prog => {
-                    if (prog.success && prog.percentage !== undefined) {
+                    if (prog.success && 'percentage' in prog && prog.percentage !== undefined) {
                         setSucProgress({
                             percentage: prog.percentage,
                             total: prog.total || 0,
@@ -80,17 +80,17 @@ export default function Dashboard() {
                 })
                 // Fetch details
                 getSucDetails(res.id).then(det => {
-                    if (det.success && det.data) setSucRecords(det.data)
+                    if (det.success && 'data' in det) setSucRecords(det.data)
                 })
             }
         })
 
         getRecentTransactions().then(res => {
-            if (res.success && res.data) setRecentTransactions(res.data)
+            if (res.success && 'data' in res) setRecentTransactions(res.data)
         })
 
         getAllTransactions().then(res => {
-            if (res.success && res.data) setAllTransactions(res.data)
+            if (res.success && 'data' in res) setAllTransactions(res.data)
         })
 
     }, [refreshKey])
