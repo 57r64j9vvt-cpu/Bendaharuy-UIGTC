@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/others"
 import { getDashboardMetrics } from "@/actions/dashboard"
 import { getSucDetails, markAsPaid, getSucProgress, getLatestEventId } from "@/actions/suc"
 import { getFinancialChartData, createTransaction, getRecentTransactions, getAllTransactions } from "@/actions/transaction"
+import { getPockets } from "@/actions/pocket"
 import { FinancialChart } from "@/components/FinancialChart"
-import { Plus, X, Loader2, Check } from "lucide-react"
+import { Plus, X, Loader2, Check, Wallet } from "lucide-react"
+import Link from "next/link"
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -30,6 +32,7 @@ export default function Dashboard() {
     const [chartData, setChartData] = useState<{ date: string; income: number; expense: number }[]>([])
     const [recentTransactions, setRecentTransactions] = useState<any[]>([])
     const [allTransactions, setAllTransactions] = useState<any[]>([])
+    const [pockets, setPockets] = useState<any[]>([])
 
     const [refreshKey, setRefreshKey] = useState(0)
 
@@ -40,7 +43,8 @@ export default function Dashboard() {
         amount: '',
         description: '',
         type: 'INCOME' as 'INCOME' | 'EXPENSE',
-        category: 'General'
+        category: 'General',
+        pocketId: ''
     })
 
     // We need an Event ID to fetch SUC. Real app would select period.
@@ -93,6 +97,11 @@ export default function Dashboard() {
             if (res.success && 'data' in res) setAllTransactions(res.data)
         })
 
+        // Fetch Pockets for dropdown
+        getPockets().then(res => {
+            if (res.success && 'data' in res) setPockets(res.data || [])
+        })
+
     }, [refreshKey])
 
     const handleCreateTransaction = async (e: React.FormEvent) => {
@@ -105,12 +114,13 @@ export default function Dashboard() {
             amount,
             type: formData.type,
             description: formData.description,
-            category: formData.category
+            category: formData.category,
+            pocketId: formData.pocketId || null
         })
 
         setIsSubmitting(false)
         setIsModalOpen(false)
-        setFormData({ amount: '', description: '', type: 'INCOME', category: 'General' })
+        setFormData({ amount: '', description: '', type: 'INCOME', category: 'General', pocketId: '' })
         setRefreshKey(prev => prev + 1) // Refresh dashboard
     }
 
@@ -180,6 +190,12 @@ export default function Dashboard() {
                             {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })}
                         </Badge>
                     </div>
+                    <Link href="/pockets">
+                        <button className="flex items-center gap-2 bg-zinc-900 text-white border border-zinc-800 px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-800 transition-colors">
+                            <Wallet size={16} />
+                            <span>Pockets</span>
+                        </button>
+                    </Link>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 bg-zinc-100 text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
@@ -448,6 +464,21 @@ export default function Dashboard() {
                                         className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors"
                                         placeholder="eg. 50000"
                                     />
+                                </div>
+
+                                {/* Pocket Selection */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-zinc-500 uppercase">Assign to Pocket (Optional)</label>
+                                    <select
+                                        value={formData.pocketId}
+                                        onChange={(e) => setFormData({ ...formData, pocketId: e.target.value })}
+                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 transition-colors appearance-none"
+                                    >
+                                        <option value="">No Pocket</option>
+                                        {pockets.map((p) => (
+                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div className="space-y-2">

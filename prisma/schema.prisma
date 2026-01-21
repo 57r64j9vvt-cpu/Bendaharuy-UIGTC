@@ -16,8 +16,23 @@ model Transaction {
   category    String
   date        DateTime
   createdAt   DateTime        @default(now()) @map("created_at")
+  
+  pocketId    String?         @map("pocket_id") @db.ObjectId
+  pocket      Pocket?         @relation(fields: [pocketId], references: [id])
 
   @@map("transactions")
+}
+
+// 5. Model Pocket
+model Pocket {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  balance   Int      @default(0) // Tracked balance
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  transactions Transaction[]
+
+  @@map("pockets")
 }
 
 // 2. Model Member

@@ -9,6 +9,7 @@ export type CreateTransactionData = {
     type: 'INCOME' | 'EXPENSE'
     category: string
     description: string
+    pocketId?: string | null
 }
 
 /**
@@ -17,19 +18,37 @@ export type CreateTransactionData = {
 export async function createTransaction(data: CreateTransactionData) {
     try {
         console.time('Prisma Create')
-        await prisma.transaction.create({
-            data: {
-                amount: data.amount,
-                type: data.type,
-                category: data.category,
-                description: data.description,
-                date: new Date(),
-            },
+        await prisma.$transaction(async (tx) => {
+            // 1. Create Transaction
+            await tx.transaction.create({
+                data: {
+                    amount: data.amount,
+                    type: data.type,
+                    category: data.category,
+                    description: data.description,
+                    date: new Date(),
+                    pocketId: data.pocketId || null
+                },
+            })
+
+            // 2. Update Pocket Balance if pocketId is provided
+            if (data.pocketId) {
+                const amountChange = data.type === 'INCOME' ? data.amount : -data.amount
+                await tx.pocket.update({
+                    where: { id: data.pocketId },
+                    data: {
+                        balance: {
+                            increment: amountChange
+                        }
+                    }
+                })
+            }
         })
         console.timeEnd('Prisma Create')
 
         console.time('Revalidate')
         revalidatePath('/')
+        revalidatePath('/pockets')
         console.timeEnd('Revalidate')
 
         return { success: true }
