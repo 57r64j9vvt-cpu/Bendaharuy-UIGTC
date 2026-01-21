@@ -6,13 +6,20 @@ import { handleDbError } from '@/lib/db-error'
 export async function getDashboardMetrics() {
     try {
         // 1. Calculate Total Income
-        // Fetch all transactions to manually calculate totals (more robust for Mongo/Prisma edge cases)
-        const transactions = await prisma.transaction.findMany({
-            select: {
-                type: true,
-                amount: true
-            }
-        })
+        // Fetch all transactions and pockets
+        const [transactions, pockets] = await Promise.all([
+            prisma.transaction.findMany({
+                select: {
+                    type: true,
+                    amount: true
+                }
+            }),
+            prisma.pocket.findMany({
+                select: {
+                    balance: true
+                }
+            })
+        ])
 
         let totalIncome = 0
         let totalExpense = 0
@@ -23,7 +30,10 @@ export async function getDashboardMetrics() {
         })
 
         // Totals calculated above
-        const totalBalance = totalIncome - totalExpense
+        // const totalBalance = totalIncome - totalExpense
+
+        // Use Pockets for Total Balance
+        const totalBalance = pockets.reduce((sum, pocket) => sum + pocket.balance, 0)
 
         return {
             success: true,
