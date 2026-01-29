@@ -10,8 +10,9 @@ import { getSucDetails, markAsPaid, getSucProgress, getLatestEventId } from "@/a
 import { getFinancialChartData, createTransaction, getRecentTransactions, getAllTransactions } from "@/actions/transaction"
 import { getPockets } from "@/actions/pocket"
 import { FinancialChart } from "@/components/FinancialChart"
-import { Plus, X, Loader2, Check, Wallet } from "lucide-react"
+import { Plus, X, Loader2, Check, Wallet, RefreshCcw } from "lucide-react"
 import Link from "next/link"
+import { syncPocketBalances } from "@/actions/sync"
 
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -39,6 +40,17 @@ export default function Dashboard() {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSyncing, setIsSyncing] = useState(false)
+
+    const handleSync = async () => {
+        setIsSyncing(true)
+        const res = await syncPocketBalances()
+        if (res.success) {
+            setRefreshKey(prev => prev + 1)
+            // Optional: toast or alert; since we don't have toast setup visible, we'll just refresh
+        }
+        setIsSyncing(false)
+    }
     const [formData, setFormData] = useState({
         amount: '',
         description: '',
@@ -196,6 +208,14 @@ export default function Dashboard() {
                             <span>Pockets</span>
                         </button>
                     </Link>
+                    <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="flex items-center gap-2 bg-zinc-900 text-zinc-400 border border-zinc-800 px-3 py-2 rounded-full text-sm font-medium hover:bg-zinc-800 hover:text-white transition-colors"
+                        title="Recalculate Balances"
+                    >
+                        <RefreshCcw size={16} className={isSyncing ? "animate-spin" : ""} />
+                    </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 bg-zinc-100 text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-200 transition-colors"
