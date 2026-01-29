@@ -17,7 +17,7 @@ async function main() {
 
     console.log("Sum of Pockets (Manual):", sumPockets)
 
-    if (metrics.success && metrics.data && metrics.data.totalBalance === sumPockets) {
+    if (metrics.success && "data" in metrics && metrics.data.totalBalance === sumPockets) {
         console.log("SUCCESS: Dashboard Total Balance matches Sum of Pockets")
     } else {
         console.error("FAILURE: Mismatch detected")
